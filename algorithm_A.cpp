@@ -2,49 +2,125 @@
 #include <stdlib.h>
 #include <time.h>
 #include "../include/algorithm.h"
+#define maximumDepth 6
+#define INFINITY 65535
 
 using namespace std;
 
-/******************************************************
- * In your algorithm, you can just use the the funcitons
- * listed by TA to get the board information.(functions 
- * 1. ~ 4. are listed in next block)
- * 
- * The STL library functions is not allowed to use.
-******************************************************/
+int r[] = {0, -1, 0, 1};
+int c[] = {1, 0, -1, 0};
 
-/*************************************************************************
- * 1. int board.get_orbs_num(int row_index, int col_index)
- * 2. int board.get_capacity(int row_index, int col_index)
- * 3. char board.get_cell_color(int row_index, int col_index)
- * 4. void board.print_current_board(int row_index, int col_index, int round)
- * 
- * 1. The function that return the number of orbs in cell(row, col)
- * 2. The function that return the orb capacity of the cell(row, col)
- * 3. The function that return the color fo the cell(row, col)
- * 4. The function that print out the current board statement
-*************************************************************************/
+bool isCritical(Board b, int i, int j){
+    if (b.get_capacity(i, j) - b.get_orbs_num(i, j) == 1)
+        return true;
+    return false;
+}
 
+int evaluation(Board b, int colorAI){
+    int score = 0;
+    for (int i = 0; i < 5; i++){
+        for (int j = 0; j < 6; j++){
+            if (b.get_cell_color(i, j) == colorAI){
+                //If the cell is the player's color, score + 1
+                score++;
+                //Calculate the score of critical opponent surrounding to the player
+                int criticalOpponent = 0;
+                for (int k = 0; k < 4; k++){
+                    int row = i + r[k];
+                    int col = j + c[k];
+                    if (row >= 0 && row < 5 && col >= 0 && col < 6){
+                        if (b.get_cell_color(row, col) != colorAI && b.get_cell_color(row, col) != 'w' && isCritical(b, row, col))
+                            //If opponent is critical by placing lesser orbs, it get higher score
+                            criticalOpponent += (5 - b.get_orbs_num(row, col));
+                    }
+                }
+                
+                if (criticalOpponent)
+                    score -= criticalOpponent;
+                else{
+                    if (isCritical(b, i, j))
+                        score += 2;
+                    if (b.get_capacity(i, j) < 4)
+                        score += (5 - b.get_capacity(i, j)) 
+                }
+            }
+        }
+    }
+    return score;
+}
+
+int minimax(Board b, Player previousPlayer, int myAI, int depth, bool isMaximizingPlayer){
+    if (b.win_the_game(previousPlayer))
+        if (!isMaximizingPlayer)
+            return INFINITY;
+        else
+            return -INFINITY;
+    else if (depth == 0)
+        return evaluation(b, myAI);
+    //Set the color of current player
+    int color;
+    if (previousPlayer.get_color() == 'r')
+        color = 'b';
+    else
+        color = 'r';    
+    Player player(color);
+    
+    if (isMaximizingPlayer){
+        int bestScore = -INFINITY;
+        for (int i = 0; i < 5; i++){
+            for (int j = 0; j < 6; j++){
+                if (board.get_cell_color(i, j) == color || board.get_cell_color(i, j) == 'w'){
+                    Board currentBoard = b;
+                    currentBoard.place_orb(i, j, &player);
+                    //Next round
+                    int score = minimax(currentBoard, player, myAI, depth - 1, false);
+                    //Select maximizing step
+                    if (score > bestScore)
+                        bestScore = score;
+                }
+            }
+        }
+        return bestScore;
+    } else{
+        int bestScore = INFINITY;
+        for (int i = 0; i < 5; i++){
+            for (int j = 0; j < 6; j++){
+                if (board.get_cell_color(i, j) == color || board.get_cell_color(i, j) == 'w'){
+                    Board currentBoard = b;
+                    currentBoard.place_orb(i, j, &player);
+                    //Next round
+                    int score = minimax(currentBoard, player, myAI, depth - 1, true);
+                    //Select maximizing step
+                    if (score < bestScore)
+                        bestScore = score;
+                }
+            }
+        }
+        return bestScore;
+    }
+}
 
 void algorithm_A(Board board, Player player, int index[]){
-
-    // cout << board.get_capacity(0, 0) << endl;
-    // cout << board.get_orbs_num(0, 0) << endl;
-    // cout << board.get_cell_color(0, 0) << endl;
-    // board.print_current_board(0, 0, 0);
-
-    //////////// Random Algorithm ////////////
-    // Here is the random algorithm for your reference, you can delete or comment it.
-    srand(time(NULL));
-    int row, col;
     int color = player.get_color();
-    
-    while(1){
-        row = rand() % 5;
-        col = rand() % 6;
-        if(board.get_cell_color(row, col) == color || board.get_cell_color(row, col) == 'w') break;
-    }
+    int bestScore = -INFINITY;
 
-    index[0] = row;
-    index[1] = col;
+    for (int i = 0; i < 5; i++){
+        for (int j = 0; j < 6; j++){
+            if (board.get_cell_color(i, j) == color || board.get_cell_color(i, j) == 'w'){
+                Board currentBoard = board;
+                currentBoard.place_orb(i, j, &player);
+                //Next round
+                int score = minimax(currentBoard, player, color, maximumDepth, false);
+                //Select maximizing step
+                if (score > bestScore){
+                    bestScore = score;
+                    index[0] = i;
+                    index[1] = j;
+                }
+            }
+        }
+    }
 }
+
+
+
