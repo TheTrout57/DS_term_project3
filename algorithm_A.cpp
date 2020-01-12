@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include "../include/algorithm.h"
-#define maximumDepth 6
+#define maximumDepth 3
 #define INFINITY 65535
 
 using namespace std;
@@ -41,7 +41,7 @@ int evaluation(Board b, int colorAI){
                     if (isCritical(b, i, j))
                         score += 2;
                     if (b.get_capacity(i, j) < 4)
-                        score += (5 - b.get_capacity(i, j)) 
+                        score += (5 - b.get_capacity(i, j));
                 }
             }
         }
@@ -69,7 +69,7 @@ int minimax(Board b, Player previousPlayer, int myAI, int depth, bool isMaximizi
         int bestScore = -INFINITY;
         for (int i = 0; i < 5; i++){
             for (int j = 0; j < 6; j++){
-                if (board.get_cell_color(i, j) == color || board.get_cell_color(i, j) == 'w'){
+                if (b.get_cell_color(i, j) == color || b.get_cell_color(i, j) == 'w'){
                     Board currentBoard = b;
                     currentBoard.place_orb(i, j, &player);
                     //Next round
@@ -85,7 +85,7 @@ int minimax(Board b, Player previousPlayer, int myAI, int depth, bool isMaximizi
         int bestScore = INFINITY;
         for (int i = 0; i < 5; i++){
             for (int j = 0; j < 6; j++){
-                if (board.get_cell_color(i, j) == color || board.get_cell_color(i, j) == 'w'){
+                if (b.get_cell_color(i, j) == color || b.get_cell_color(i, j) == 'w'){
                     Board currentBoard = b;
                     currentBoard.place_orb(i, j, &player);
                     //Next round
@@ -121,6 +121,3 @@ void algorithm_A(Board board, Player player, int index[]){
         }
     }
 }
-
-
-
